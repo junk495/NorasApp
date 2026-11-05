@@ -9,7 +9,7 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 - `vite-plugin-pwa` (Manifest + Service Worker, offline-fähig, installierbar)
 - `dexie` + `dexie-react-hooks` (IndexedDB, lokal & offline)
 - Keine Backend-Pflicht: alle Daten bleiben lokal im Browser
-- **Keine eingebauten Standardvokabeln** – Wortschatz wird ausschließlich per CSV-Import oder Einzel-Eingabe angelegt
+- Keine automatisch eingebauten Vokabeln – Wortschatz wird per JSON-Import, Einzel-Eingabe oder über die Standard-Liste „Add common verbs“ angelegt
 
 ## Wichtige Befehle
 - `npm run dev` – Entwicklungsserver starten
@@ -39,8 +39,13 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 
 ## Import/Export (JSON)
 - **Ein einziges JSON-Format** für alles: Profile, Vokabeln (Wörter + Irregular Verbs inkl. Lernfortschritt) und Statistik.
-- Export: `src/lib/export.ts` → `buildBackup()`; Import: `parseBackup()` + `restoreBackup()` (ersetzt den gesamten Bestand).
-- Es gibt **keine** mitgelieferten Standardvokabeln – der Wortschatz wird ausschließlich importiert oder einzeln angelegt.
+- Export: `src/lib/export.ts` → `buildBackup()`.
+- Import: `parseImport()` erkennt automatisch zwei Formen:
+  - **Volles Backup** (Objekt mit `profiles`/`vocabulary`/`studyStats`) → `restoreBackup()` ersetzt den gesamten Bestand.
+  - **Einfache Kartenliste** (Array) → `cardsToVocabulary()` + `addCardsToProfile()` fügt dem aktiven Profil hinzu.
+    - Wort: `{ "english": "dog", "german": "Hund" }`
+    - Verb: `{ "infinitive": "go", "pastSimple": "went", "pastParticiple": "gone", "german": "gehen" }`
+- Standard-Liste gängiger Irregular Verbs: `src/data/irregularVerbs.ts`, per Button „Add common verbs“ hinzufügbar.
 - Datenmodell: Die Tabelle `vocabulary` unterscheidet über `kind` (`word` | `irregular`) zwei Kartentypen; Verben haben zusätzlich `pastSimple`/`pastParticiple`.
 
 ## Projektstruktur
@@ -49,8 +54,8 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 - `src/lib/leitner.ts` – Leitner-Logik (Boxen, Intervalle, Bewertung)
 - `src/lib/answers.ts` – Antwort-Prüfung (eingetippte Übersetzung vs. Lösung, Umlaut-/Artikel-tolerant)
 - `src/lib/dates.ts` – Datums-/Streak-Helfer
-- `src/lib/csv.ts` – CSV-Parser + Import-Logik
-- `src/lib/export.ts` – CSV-Export der Vokabeln + JSON-Backup (Profile, Fortschritt, Statistik)
+- `src/lib/export.ts` – JSON-Import/Export (Backup + einfache Kartenliste)
+- `src/data/irregularVerbs.ts` – Standard-Liste gängiger Irregular Verbs
 - `src/components/` – UI-Komponenten (Dashboard, LearnSession, VocabManager, Profile, Import, UpdatePrompt)
 - `src/vite-env.d.ts` – globale Typen (`__APP_VERSION__`, PWA-Referenzen)
 - `public/icons/` – App-Icons (SVG-Quellen + generierte PNGs)

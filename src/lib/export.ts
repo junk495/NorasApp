@@ -1,4 +1,4 @@
-import { db, type Profile, type StudyStats, type Vocabulary } from '../db'
+import { db, type NewVocabulary, type Profile, type StudyStats, type Vocabulary } from '../db'
 
 export interface BackupData {
   app: string
@@ -8,6 +8,23 @@ export interface BackupData {
   vocabulary: Vocabulary[]
   studyStats: StudyStats[]
 }
+
+/** A single card as it may appear in a simple JSON list (words and verbs). */
+export interface SimpleCard {
+  kind?: 'word' | 'irregular'
+  english?: string
+  /** Alias for `english` (used for verbs). */
+  infinitive?: string
+  german?: string
+  example?: string
+  category?: string
+  pastSimple?: string
+  pastParticiple?: string
+}
+
+export type ImportPayload =
+  | { mode: 'restore'; data: BackupData }
+  | { mode: 'add'; cards: SimpleCard[] }
 
 /** Reads the complete app state (profiles, vocabulary with progress, study stats). */
 export async function buildBackup(): Promise<BackupData> {
@@ -26,8 +43,8 @@ export async function buildBackup(): Promise<BackupData> {
   }
 }
 
-/** Parses and validates a backup JSON file, filling sensible defaults where fields are missing. */
-export function parseBackup(text: string): BackupData {
+/** Detects and parses either a full backup object or a simple card array. */
+export function parseImport(text: string): ImportPayload {
   let parsed: unknown
   try {
     parsed = JSON.parse(text)
@@ -35,24 +52,86 @@ export function parseBackup(text: string): BackupData {
     throw new Error('This file is not valid JSON.')
   }
 
-  if (typeof parsed !== 'object' || parsed === null) {
-    throw new Error('Invalid backup format.')
+  if (Array.isArray(parsed)) {
+    return { mode: 'add', cards: parsed as SimpleCard[] }
   }
 
-  const data = parsed as Partial<BackupData>
-
-  if (!Array.isArray(data.profiles) || !Array.isArray(data.vocabulary) || !Array.isArray(data.studyStats)) {
-    throw new Error('This file is not a NorasApp backup (missing profiles, vocabulary or studyStats).')
+  if (typeof parsed === 'object' && parsed !== null) {
+    const data = parsed as Partial<BackupData>
+    if (Array.isArray(data.profiles) && Array.isArray(data.vocabulary) && Array.isArray(data.studyStats)) {
+      return { mode: 'restore', data: normalizeBackup(data) }
+    }
   }
 
-  return {
-    app: 'NorasApp',
-    version: typeof data.version === 'number' ? data.version : 1,
-    exportedAt: typeof data.exportedAt === 'string' ? data.exportedAt : new Date().toISOString(),
-    profiles: data.profiles as Profile[],
-    vocabulary: (data.vocabulary as Partial<Vocabulary>[]).map(normalizeVocabulary),
-    studyStats: data.studyStats as StudyStats[],
+  throw new Error('This file is neither a NorasApp backup nor a card list.')
+}
+
+/** Converts a simple card list into typed vocabulary rows for the given profile. */
+export function cardsToVocabulary(cards: SimpleCard[], profileId: number): { valid: NewVocabulary[]; skipped: number } {
+  const valid: NewVocabulary[] = []
+  let skipped = 0
+
+  for (const card of cards) {
+    if (typeof card !== 'object' || card === null) {
+      skipped++
+      continue
+    }
+    const base = (card.english ?? card.infinitive ?? '').trim()
+    const german = (card.german ?? '').trim()
+    const pastSimple = (card.pastSimple ?? '').trim()
+    const pastParticiple = (card.pastParticiple ?? '').trim()
+    const isIrregular = card.kind === 'irregular' || Boolean(pastSimple) || Boolean(pastParticiple)
+
+    if (isIrregular) {
+      if (!base || !pastSimple || !pastParticiple) {
+        skipped++
+        continue
+      }
+      valid.push({
+        profileId,
+        kind: 'irregular',
+        english: base,
+        german,
+        pastSimple,
+        pastParticiple,
+        example: card.example?.trim() || undefined,
+      })
+    } else {
+      if (!base || !german) {
+        skipped++
+        continue
+      }
+      valid.push({
+        profileId,
+        kind: 'word',
+        english: base,
+        german,
+        example: card.example?.trim() || undefined,
+        category: card.category?.trim() || undefined,
+      })
+    }
   }
+
+  return { valid, skipped }
+}
+
+/** Adds vocabulary rows with fresh Leitner state (due immediately). */
+export async function addCardsToProfile(cards: NewVocabulary[]): Promise<void> {
+  if (cards.length === 0) return
+  const now = Date.now()
+  await db.transaction('rw', db.vocabulary, async () => {
+    await db.vocabulary.bulkAdd(
+      cards.map((c) => ({
+        ...c,
+        box: 1,
+        dueDate: now,
+        correctCount: 0,
+        wrongCount: 0,
+        lastReviewed: null,
+        createdAt: now,
+      })),
+    )
+  })
 }
 
 /** Replaces the current data with the backup data (keeps ids for referential integrity). */
@@ -65,6 +144,17 @@ export async function restoreBackup(data: BackupData): Promise<void> {
     await db.vocabulary.bulkPut(data.vocabulary)
     await db.studyStats.bulkPut(data.studyStats)
   })
+}
+
+function normalizeBackup(data: Partial<BackupData>): BackupData {
+  return {
+    app: 'NorasApp',
+    version: typeof data.version === 'number' ? data.version : 1,
+    exportedAt: typeof data.exportedAt === 'string' ? data.exportedAt : new Date().toISOString(),
+    profiles: data.profiles as Profile[],
+    vocabulary: (data.vocabulary as Partial<Vocabulary>[]).map(normalizeVocabulary),
+    studyStats: data.studyStats as StudyStats[],
+  }
 }
 
 function normalizeVocabulary(v: Partial<Vocabulary>): Vocabulary {

@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type CardKind, type Profile, type Vocabulary } from '../db'
 import { ImportDialog } from './ImportDialog'
 import { VocabForm } from './VocabForm'
-import { buildBackup, downloadTextFile } from '../lib/export'
+import { addCardsToProfile, buildBackup, downloadTextFile } from '../lib/export'
+import { COMMON_IRREGULAR_VERBS } from '../data/irregularVerbs'
 
 interface Props {
   profile: Profile
@@ -57,6 +58,25 @@ export function VocabManager({ profile }: Props) {
     })
   }
 
+  async function addCommonVerbs() {
+    if (!words) return
+    const existing = new Set(
+      words.filter((w) => w.kind === 'irregular').map((w) => w.english.toLowerCase()),
+    )
+    const newCards = COMMON_IRREGULAR_VERBS.filter((v) => !existing.has(v.infinitive.toLowerCase())).map(
+      (v) => ({
+        profileId,
+        kind: 'irregular' as const,
+        english: v.infinitive,
+        german: v.german,
+        pastSimple: v.pastSimple,
+        pastParticiple: v.pastParticiple,
+      }),
+    )
+    if (newCards.length === 0) return
+    await addCardsToProfile(newCards)
+  }
+
   if (!words) {
     return <div className="loading">Loading…</div>
   }
@@ -105,6 +125,9 @@ export function VocabManager({ profile }: Props) {
         </button>
         <button type="button" className="btn btn--primary" onClick={() => setCreating('irregular')}>
           Add verb
+        </button>
+        <button type="button" className="btn" onClick={addCommonVerbs}>
+          Add common verbs
         </button>
         <button type="button" className="btn" onClick={() => setShowImport(true)}>
           Import (JSON)
@@ -161,7 +184,7 @@ export function VocabManager({ profile }: Props) {
 
       {creating && <VocabForm profile={profile} kind={creating} onClose={() => setCreating(null)} />}
       {editing && <VocabForm profile={profile} kind={editing.kind} initial={editing} onClose={() => setEditing(null)} />}
-      {showImport && <ImportDialog onClose={() => setShowImport(false)} />}
+      {showImport && <ImportDialog profile={profile} onClose={() => setShowImport(false)} />}
     </section>
   )
 }
