@@ -1,5 +1,6 @@
 import { db, type Profile } from '../db'
 import { ProfileForm } from './ProfileForm'
+import { buildBackup, downloadTextFile } from '../lib/export'
 
 interface Props {
   profiles: Profile[]
@@ -18,6 +19,12 @@ export function ProfilesView({ profiles, activeId, onSelect }: Props) {
       await db.vocabulary.where('profileId').equals(id).delete()
       await db.studyStats.where('profileId').equals(id).delete()
     })
+  }
+
+  async function exportBackup() {
+    const backup = await buildBackup()
+    const date = new Date().toISOString().slice(0, 10)
+    downloadTextFile(`norasapp-backup-${date}.json`, JSON.stringify(backup, null, 2), 'application/json')
   }
 
   return (
@@ -48,6 +55,14 @@ export function ProfilesView({ profiles, activeId, onSelect }: Props) {
 
       <h3>New profile</h3>
       <ProfileForm />
+
+      <div className="card">
+        <h3>Backup</h3>
+        <p className="muted">Download all profiles, vocabulary and learning progress as a JSON file.</p>
+        <button type="button" className="btn" onClick={exportBackup}>
+          Export backup (JSON)
+        </button>
+      </div>
     </section>
   )
 }

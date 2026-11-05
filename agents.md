@@ -48,6 +48,7 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 - `src/lib/answers.ts` – Antwort-Prüfung (eingetippte Übersetzung vs. Lösung, Umlaut-/Artikel-tolerant)
 - `src/lib/dates.ts` – Datums-/Streak-Helfer
 - `src/lib/csv.ts` – CSV-Parser + Import-Logik
+- `src/lib/export.ts` – CSV-Export der Vokabeln + JSON-Backup (Profile, Fortschritt, Statistik)
 - `src/components/` – UI-Komponenten (Dashboard, LearnSession, VocabManager, Profile, Import, UpdatePrompt)
 - `src/vite-env.d.ts` – globale Typen (`__APP_VERSION__`, PWA-Referenzen)
 - `public/icons/` – App-Icons (SVG-Quellen + generierte PNGs)

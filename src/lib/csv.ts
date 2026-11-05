@@ -110,3 +110,11 @@ export function parseVocabCsv(text: string, profileId: number): CsvParseResult {
 export function csvTemplate(): string {
   return 'english,german,example,category\n'
 }
+
+/** Quotes a value for CSV output when it contains special characters. */
+export function escapeCsvField(value: string): string {
+  if (/[",\n\r]/.test(value)) {
+    return '"' + value.replace(/"/g, '""') + '"'
+  }
+  return value
+}

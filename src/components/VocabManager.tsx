@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Profile, type Vocabulary } from '../db'
 import { ImportDialog } from './ImportDialog'
 import { VocabForm } from './VocabForm'
+import { downloadTextFile, vocabToCsv } from '../lib/export'
 
 interface Props {
   profile: Profile
@@ -45,6 +46,12 @@ export function VocabManager({ profile }: Props) {
     await db.vocabulary.delete(id)
   }
 
+  function exportCsv() {
+    if (!words || words.length === 0) return
+    const safeName = profile.name.trim().replace(/[^a-z0-9_-]+/gi, '-') || 'profile'
+    downloadTextFile(`norasapp-${safeName}-vocabulary.csv`, vocabToCsv(words), 'text/csv')
+  }
+
   if (!words) {
     return <div className="loading">Loading…</div>
   }
@@ -79,6 +86,9 @@ export function VocabManager({ profile }: Props) {
         </button>
         <button type="button" className="btn" onClick={() => setShowImport(true)}>
           Import CSV
+        </button>
+        <button type="button" className="btn" onClick={exportCsv} disabled={words.length === 0}>
+          Export CSV
         </button>
       </div>
 
