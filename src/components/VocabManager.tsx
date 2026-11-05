@@ -157,7 +157,8 @@ export function VocabManager({ profile }: Props) {
                 <span className="vocab-item__english">{w.english}</span>
                 {w.kind === 'irregular' ? (
                   <span className="vocab-item__german">
-                    {w.pastSimple} · {w.pastParticiple}
+                    {w.pastSimple}
+                    {w.pastParticiple && w.pastParticiple !== '-' ? ` · ${w.pastParticiple}` : ''}
                   </span>
                 ) : (
                   <span className="vocab-item__german">{w.german}</span>

@@ -6,6 +6,8 @@ export interface Profile {
   name: string
   color: string
   createdAt: number
+  /** When false, irregular verbs are quizzed on past simple only (no past participle). */
+  quizParticiple?: boolean
 }
 
 export type CardKind = 'word' | 'irregular'

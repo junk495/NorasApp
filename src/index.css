@@ -703,3 +703,13 @@ h3 {
 .import-warning {
   color: #fbbf24;
 }
+
+.participle-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}

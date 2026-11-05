@@ -20,6 +20,10 @@ export function ProfilesView({ profiles, activeId, onSelect }: Props) {
     })
   }
 
+  async function toggleParticiple(id: number, value: boolean) {
+    await db.profiles.update(id, { quizParticiple: value })
+  }
+
   return (
     <section>
       <h2>Profiles</h2>
@@ -31,6 +35,14 @@ export function ProfilesView({ profiles, activeId, onSelect }: Props) {
                 <span className="profile-dot" style={{ background: p.color }} />
                 <span className="profile-item__name">{p.name}</span>
               </button>
+              <label className="participle-toggle" title="Quiz past participle for irregular verbs">
+                <input
+                  type="checkbox"
+                  checked={p.quizParticiple !== false}
+                  onChange={(e) => void toggleParticiple(p.id!, e.target.checked)}
+                />
+                Participle
+              </label>
               <button
                 type="button"
                 className="icon-button icon-button--danger"

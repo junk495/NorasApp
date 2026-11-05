@@ -45,7 +45,8 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
   - **Einfache Kartenliste** (Array) → `cardsToVocabulary()` + `addCardsToProfile()` fügt dem aktiven Profil hinzu.
     - Wort: `{ "english": "dog", "german": "Hund" }`
     - Verb: `{ "infinitive": "go", "pastSimple": "went", "pastParticiple": "gone", "german": "gehen" }`
-- Standard-Liste gängiger Irregular Verbs: `src/data/irregularVerbs.ts`, per Button „Add common verbs“ hinzufügbar.
+- Standard-Liste gängiger Irregular Verbs (≈88): `src/data/irregularVerbs.ts`, per Button „Add common verbs“ hinzufügbar.
+- Pro Profil einstellbar, ob nur „past simple“ oder zusätzlich „past participle“ abgefragt wird (`Profile.quizParticiple`).
 - Datenmodell: Die Tabelle `vocabulary` unterscheidet über `kind` (`word` | `irregular`) zwei Kartentypen; Verben haben zusätzlich `pastSimple`/`pastParticiple`.
 
 ## Projektstruktur

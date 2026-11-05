@@ -42,9 +42,11 @@ export function LearnSession({ profile, onExit }: Props) {
     if (!word || graded) return
     let correct = false
     if (word.kind === 'irregular') {
-      correct =
-        answersMatch(pastInput, word.pastSimple ?? '') &&
-        answersMatch(participleInput, word.pastParticiple ?? '')
+      const quizParticiple =
+        profile.quizParticiple !== false && Boolean(word.pastParticiple) && word.pastParticiple !== '-'
+      const pastOk = answersMatch(pastInput, word.pastSimple ?? '')
+      const participleOk = !quizParticiple || answersMatch(participleInput, word.pastParticiple ?? '')
+      correct = pastOk && participleOk
     } else {
       correct = answersMatch(input, word.german)
     }
@@ -96,6 +98,11 @@ export function LearnSession({ profile, onExit }: Props) {
   }
 
   const isIrregular = word.kind === 'irregular'
+  const needsParticiple =
+    isIrregular &&
+    profile.quizParticiple !== false &&
+    Boolean(word.pastParticiple) &&
+    word.pastParticiple !== '-'
 
   return (
     <div className="learn-session">
@@ -105,7 +112,7 @@ export function LearnSession({ profile, onExit }: Props) {
 
       <div className="card prompt-card">
         <span className="flashcard__label">
-          {isIrregular ? 'Past simple & past participle' : 'Translate to German'}
+          {isIrregular ? (needsParticiple ? 'Past simple & past participle' : 'Past simple') : 'Translate to German'}
         </span>
         <span className="flashcard__word">{word.english}</span>
         {!isIrregular && word.example && <span className="flashcard__example">{word.example}</span>}
@@ -135,20 +142,22 @@ export function LearnSession({ profile, onExit }: Props) {
               autoCorrect="off"
               spellCheck={false}
             />
-            <input
-              className="input answer-input"
-              value={participleInput}
-              onChange={(e) => setParticipleInput(e.target.value)}
-              placeholder="Past participle"
-              autoComplete="off"
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck={false}
-            />
+            {needsParticiple && (
+              <input
+                className="input answer-input"
+                value={participleInput}
+                onChange={(e) => setParticipleInput(e.target.value)}
+                placeholder="Past participle"
+                autoComplete="off"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            )}
             <button
               type="submit"
               className="btn btn--primary"
-              disabled={!pastInput.trim() || !participleInput.trim()}
+              disabled={!pastInput.trim() || (needsParticiple && !participleInput.trim())}
             >
               Check
             </button>
@@ -183,7 +192,7 @@ export function LearnSession({ profile, onExit }: Props) {
           <div className="answer-feedback__correct">
             {isIrregular ? (
               <>
-                Answer: <strong>{word.pastSimple} · {word.pastParticiple}</strong>
+                Answer: <strong>{needsParticiple ? `${word.pastSimple} · ${word.pastParticiple}` : word.pastSimple}</strong>
                 {graded === 'wrong' && word.german && (
                   <>
                     <br />
