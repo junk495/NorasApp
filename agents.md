@@ -20,9 +20,9 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 ## Deployment (GitHub Pages)
 - Die App läuft unter einem Unterpfad: `https://junk495.github.io/NorasApp/`.
 - Deshalb ist in `vite.config.cts` `base: '/NorasApp/'` gesetzt – bei Umbenennung des Repos oder eigener Domain anpassen.
-- Deployment per GitHub Actions: `.github/workflows/deploy.yml` baut bei jedem Push auf `main` und lädt `dist/` zu Pages hoch.
-- In den Repo-Einstellungen muss unter Settings → Pages → Source „GitHub Actions“ gewählt sein.
-- Wichtig: Pages darf nicht direkt aus dem Repo-Root (Quellcode) dienen, sonst wird das rohe `index.html` (Verweis auf `/src/main.tsx`) ausgeliefert → weißer Bildschirm.
+- Deployment per GitHub Actions: `.github/workflows/deploy.yml` baut bei jedem Push auf `main` und pusht `dist/` in den Branch `gh-pages` (`peaceiris/actions-gh-pages`).
+- In den Repo-Einstellungen muss unter Settings → Pages → Source **„Deploy from a branch“** mit Branch **`gh-pages`** und Ordner **`/ (root)`** gewählt sein.
+- Wichtig: Pages darf nicht direkt aus `main` (Quellcode) dienen, sonst wird das rohe `index.html` (Verweis auf `/src/main.tsx`) ausgeliefert → weißer Bildschirm.
 
 ## Versionierung (Muster 0.0.0 / SemVer)
 - **Einzige Quelle der Wahrheit** ist das Feld `version` in `package.json`.
