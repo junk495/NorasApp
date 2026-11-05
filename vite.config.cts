@@ -8,6 +8,9 @@ import pkg from './package.json'
 // works when the Vite config is bundled as CommonJS.
 // https://vitejs.dev/config/
 export default defineConfig({
+  // GitHub Pages serves the app under a sub-path: https://junk495.github.io/NorasApp/
+  // Keep this in sync with the repository name (or a custom domain).
+  base: '/NorasApp/',
   define: {
     // Exposes the version from package.json to the app (see src/vite-env.d.ts).
     // When this value changes, the bundle hash changes, so the service worker
@@ -28,8 +31,8 @@ export default defineConfig({
         background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        start_url: '/NorasApp/',
+        scope: '/NorasApp/',
         icons: [
           { src: 'icons/pwa-icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/pwa-icon-512.png', sizes: '512x512', type: 'image/png' },

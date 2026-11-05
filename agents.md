@@ -17,6 +17,11 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 - `npm run preview` – Produktions-Build lokal testen
 - `npm run generate:icons` – PNG-Icons aus den SVGs unter `public/icons` erzeugen
 
+## Deployment (GitHub Pages)
+- Die App läuft unter einem Unterpfad: `https://junk495.github.io/NorasApp/`.
+- Deshalb ist in `vite.config.cts` `base: '/NorasApp/'` gesetzt – bei Umbenennung des Repos oder eigener Domain anpassen.
+- Nach jeder Änderung: `npm run build` und das `dist/`-Verzeichnis neu deployen.
+
 ## Versionierung (Muster 0.0.0 / SemVer)
 - **Einzige Quelle der Wahrheit** ist das Feld `version` in `package.json`.
 - Muster: `MAJOR.MINOR.PATCH` (z. B. `0.0.1` → `0.1.0` → `1.0.0`).
