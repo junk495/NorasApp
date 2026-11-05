@@ -695,3 +695,11 @@ h3 {
   background: #164e63;
   color: #a5f3fc;
 }
+
+.import-error {
+  color: var(--danger);
+}
+
+.import-warning {
+  color: #fbbf24;
+}

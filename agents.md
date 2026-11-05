@@ -37,10 +37,9 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 - Die Vite-Config läuft bewusst als CommonJS (`.cts`), weil `vite-plugin-pwa` `workbox-build` über einen `require()`-Fallback lädt. Dadurch erscheint beim Build ein harmloser „CJS deprecation“-Hinweis von Vite.
 - `src/components/UpdatePrompt.tsx`: nutzt `useRegisterSW` aus `virtual:pwa-register/react`. Prüft regelmäßig (per `registration.update()`), ob eine neue Version existiert, und zeigt bei `needRefresh` den Hinweis „A new version is available“ mit „Update“-Button (`updateServiceWorker(true)`).
 
-## CSV-Import (Formate)
-- Wörter: `english,german,example,category` (Kopfzeile optional).
-- Irregular Verbs: `infinitive,pastSimple,pastParticiple,german,note` (Kopfzeile optional).
-- Trennzeichen wird automatisch erkannt (Komma, Semikolon oder Tab); Anführungszeichen werden unterstützt.
+## Import/Export (JSON)
+- **Ein einziges JSON-Format** für alles: Profile, Vokabeln (Wörter + Irregular Verbs inkl. Lernfortschritt) und Statistik.
+- Export: `src/lib/export.ts` → `buildBackup()`; Import: `parseBackup()` + `restoreBackup()` (ersetzt den gesamten Bestand).
 - Es gibt **keine** mitgelieferten Standardvokabeln – der Wortschatz wird ausschließlich importiert oder einzeln angelegt.
 - Datenmodell: Die Tabelle `vocabulary` unterscheidet über `kind` (`word` | `irregular`) zwei Kartentypen; Verben haben zusätzlich `pastSimple`/`pastParticiple`.
 

@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type CardKind, type Profile, type Vocabulary } from '../db'
 import { ImportDialog } from './ImportDialog'
 import { VocabForm } from './VocabForm'
-import { downloadTextFile, verbsToCsv, wordsToCsv } from '../lib/export'
+import { buildBackup, downloadTextFile } from '../lib/export'
 
 interface Props {
   profile: Profile
@@ -16,7 +16,7 @@ export function VocabManager({ profile }: Props) {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
   const [kindFilter, setKindFilter] = useState<'all' | CardKind>('all')
-  const [showImport, setShowImport] = useState<CardKind | null>(null)
+  const [showImport, setShowImport] = useState(false)
   const [creating, setCreating] = useState<CardKind | null>(null)
   const [editing, setEditing] = useState<Vocabulary | null>(null)
 
@@ -50,20 +50,11 @@ export function VocabManager({ profile }: Props) {
     await db.vocabulary.delete(id)
   }
 
-  function exportWords() {
-    if (!words) return
-    const list = words.filter((w) => w.kind === 'word')
-    if (list.length === 0) return
-    const safeName = profile.name.trim().replace(/[^a-z0-9_-]+/gi, '-') || 'profile'
-    downloadTextFile(`norasapp-${safeName}-words.csv`, wordsToCsv(list), 'text/csv')
-  }
-
-  function exportVerbs() {
-    if (!words) return
-    const list = words.filter((w) => w.kind === 'irregular')
-    if (list.length === 0) return
-    const safeName = profile.name.trim().replace(/[^a-z0-9_-]+/gi, '-') || 'profile'
-    downloadTextFile(`norasapp-${safeName}-verbs.csv`, verbsToCsv(list), 'text/csv')
+  function exportJson() {
+    void buildBackup().then((backup) => {
+      const date = new Date().toISOString().slice(0, 10)
+      downloadTextFile(`norasapp-backup-${date}.json`, JSON.stringify(backup, null, 2), 'application/json')
+    })
   }
 
   if (!words) {
@@ -115,26 +106,20 @@ export function VocabManager({ profile }: Props) {
         <button type="button" className="btn btn--primary" onClick={() => setCreating('irregular')}>
           Add verb
         </button>
-        <button type="button" className="btn" onClick={() => setShowImport('word')}>
-          Import words
+        <button type="button" className="btn" onClick={() => setShowImport(true)}>
+          Import (JSON)
         </button>
-        <button type="button" className="btn" onClick={() => setShowImport('irregular')}>
-          Import verbs
-        </button>
-        <button type="button" className="btn" onClick={exportWords} disabled={wordCount === 0}>
-          Export words
-        </button>
-        <button type="button" className="btn" onClick={exportVerbs} disabled={verbCount === 0}>
-          Export verbs
+        <button type="button" className="btn" onClick={exportJson}>
+          Export (JSON)
         </button>
       </div>
 
       {words.length === 0 ? (
         <div className="card empty">
           <p>No vocabulary yet.</p>
-          <p>Import words or irregular verbs with your own data to get started.</p>
-          <button type="button" className="btn btn--primary" onClick={() => setShowImport('word')}>
-            Import words
+          <p>Import a JSON backup or add your own words and verbs.</p>
+          <button type="button" className="btn btn--primary" onClick={() => setShowImport(true)}>
+            Import (JSON)
           </button>
         </div>
       ) : filtered.length === 0 ? (
@@ -176,7 +161,7 @@ export function VocabManager({ profile }: Props) {
 
       {creating && <VocabForm profile={profile} kind={creating} onClose={() => setCreating(null)} />}
       {editing && <VocabForm profile={profile} kind={editing.kind} initial={editing} onClose={() => setEditing(null)} />}
-      {showImport && <ImportDialog profile={profile} kind={showImport} onClose={() => setShowImport(null)} />}
+      {showImport && <ImportDialog onClose={() => setShowImport(false)} />}
     </section>
   )
 }
