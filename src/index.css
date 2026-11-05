@@ -682,3 +682,16 @@ h3 {
 .answer-feedback__correct {
   color: var(--muted);
 }
+
+.answer-form--stack {
+  flex-direction: column;
+}
+
+.toolbar--wrap {
+  flex-wrap: wrap;
+}
+
+.badge--verb {
+  background: #164e63;
+  color: #a5f3fc;
+}

@@ -1,13 +1,21 @@
 import { useRef, useState } from 'react'
-import { db, type Profile } from '../db'
-import { csvTemplate, parseVocabCsv, type CsvParseResult } from '../lib/csv'
+import { db, type CardKind, type Profile } from '../db'
+import {
+  csvTemplate,
+  irregularTemplate,
+  parseIrregularCsv,
+  parseVocabCsv,
+  type CsvParseResult,
+} from '../lib/csv'
 
 interface Props {
   profile: Profile
+  kind: CardKind
   onClose: () => void
 }
 
-export function ImportDialog({ profile, onClose }: Props) {
+export function ImportDialog({ profile, kind, onClose }: Props) {
+  const isIrregular = kind === 'irregular'
   const [result, setResult] = useState<CsvParseResult | null>(null)
   const [fileName, setFileName] = useState('')
   const [importing, setImporting] = useState(false)
@@ -17,7 +25,7 @@ export function ImportDialog({ profile, onClose }: Props) {
   async function handleFile(file: File) {
     const text = await file.text()
     setFileName(file.name)
-    setResult(parseVocabCsv(text, profile.id!))
+    setResult(isIrregular ? parseIrregularCsv(text, profile.id!) : parseVocabCsv(text, profile.id!))
     setDone(false)
   }
 
@@ -43,11 +51,12 @@ export function ImportDialog({ profile, onClose }: Props) {
   }
 
   function downloadTemplate() {
-    const blob = new Blob([csvTemplate()], { type: 'text/csv' })
+    const content = isIrregular ? irregularTemplate() : csvTemplate()
+    const blob = new Blob([content], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'norasapp-template.csv'
+    a.download = isIrregular ? 'norasapp-verbs-template.csv' : 'norasapp-words-template.csv'
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -55,9 +64,11 @@ export function ImportDialog({ profile, onClose }: Props) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Import vocabulary</h3>
+        <h3>Import {isIrregular ? 'verbs' : 'words'}</h3>
         <p className="muted">
-          CSV format: <code>english,german,example,category</code> (header optional, comma/semicolon/tab supported).
+          {isIrregular
+            ? 'CSV format: infinitive,pastSimple,pastParticiple,german,note (header optional).'
+            : 'CSV format: english,german,example,category (header optional).'}
         </p>
 
         {!result && (
@@ -86,7 +97,7 @@ export function ImportDialog({ profile, onClose }: Props) {
                 File: <strong>{fileName}</strong>
               </p>
               <p>
-                Valid words: <strong>{result.words.length}</strong>
+                Valid entries: <strong>{result.words.length}</strong>
               </p>
               {result.skipped > 0 && <p>Skipped rows: {result.skipped}</p>}
               {result.errors.length > 0 && (
@@ -107,7 +118,7 @@ export function ImportDialog({ profile, onClose }: Props) {
                 onClick={doImport}
                 disabled={importing || result.words.length === 0}
               >
-                {importing ? 'Importing…' : `Import ${result.words.length} words`}
+                {importing ? 'Importing…' : `Import ${result.words.length} ${isIrregular ? 'verbs' : 'words'}`}
               </button>
             </div>
           </>
@@ -115,7 +126,9 @@ export function ImportDialog({ profile, onClose }: Props) {
 
         {done && (
           <>
-            <p className="success">Imported {result?.words.length ?? 0} words.</p>
+            <p className="success">
+              Imported {result?.words.length ?? 0} {isIrregular ? 'verbs' : 'words'}.
+            </p>
             <div className="modal-actions">
               <button type="button" className="btn btn--primary" onClick={onClose}>
                 Done

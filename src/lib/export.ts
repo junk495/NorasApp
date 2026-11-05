@@ -10,11 +10,22 @@ export interface BackupData {
   studyStats: StudyStats[]
 }
 
-/** Serializes vocabulary rows in the import format: english,german,example,category. */
-export function vocabToCsv(words: Vocabulary[]): string {
+/** Serializes regular words in the import format: english,german,example,category. */
+export function wordsToCsv(words: Vocabulary[]): string {
   const header = 'english,german,example,category'
   const rows = words.map((w) =>
     [w.english, w.german, w.example ?? '', w.category ?? ''].map(escapeCsvField).join(','),
+  )
+  return [header, ...rows].join('\n') + '\n'
+}
+
+/** Serializes irregular verbs in the import format: infinitive,pastSimple,pastParticiple,german,note. */
+export function verbsToCsv(verbs: Vocabulary[]): string {
+  const header = 'infinitive,pastSimple,pastParticiple,german,note'
+  const rows = verbs.map((v) =>
+    [v.english, v.pastSimple ?? '', v.pastParticiple ?? '', v.german, v.example ?? '']
+      .map(escapeCsvField)
+      .join(','),
   )
   return [header, ...rows].join('\n') + '\n'
 }

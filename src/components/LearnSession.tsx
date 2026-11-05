@@ -24,6 +24,8 @@ export function LearnSession({ profile, onExit }: Props) {
   const [queue, setQueue] = useState<Vocabulary[] | null>(null)
   const [index, setIndex] = useState(0)
   const [input, setInput] = useState('')
+  const [pastInput, setPastInput] = useState('')
+  const [participleInput, setParticipleInput] = useState('')
   const [graded, setGraded] = useState<'correct' | 'wrong' | null>(null)
   const [correctCount, setCorrectCount] = useState(0)
   const [wrongCount, setWrongCount] = useState(0)
@@ -38,7 +40,14 @@ export function LearnSession({ profile, onExit }: Props) {
 
   async function submit() {
     if (!word || graded) return
-    const correct = answersMatch(input, word.german)
+    let correct = false
+    if (word.kind === 'irregular') {
+      correct =
+        answersMatch(pastInput, word.pastSimple ?? '') &&
+        answersMatch(participleInput, word.pastParticiple ?? '')
+    } else {
+      correct = answersMatch(input, word.german)
+    }
     await db.vocabulary.update(word.id!, gradeWord(word, correct))
     await recordStudy(profileId, correct)
     if (correct) setCorrectCount((c) => c + 1)
@@ -48,6 +57,8 @@ export function LearnSession({ profile, onExit }: Props) {
 
   function next() {
     setInput('')
+    setPastInput('')
+    setParticipleInput('')
     setGraded(null)
     setIndex((i) => i + 1)
   }
@@ -84,6 +95,8 @@ export function LearnSession({ profile, onExit }: Props) {
     return null
   }
 
+  const isIrregular = word.kind === 'irregular'
+
   return (
     <div className="learn-session">
       <button type="button" className="icon-button learn-session__exit" onClick={onExit} aria-label="Exit">
@@ -91,9 +104,11 @@ export function LearnSession({ profile, onExit }: Props) {
       </button>
 
       <div className="card prompt-card">
-        <span className="flashcard__label">Translate to German</span>
+        <span className="flashcard__label">
+          {isIrregular ? 'Past simple & past participle' : 'Translate to German'}
+        </span>
         <span className="flashcard__word">{word.english}</span>
-        {word.example && <span className="flashcard__example">{word.example}</span>}
+        {!isIrregular && word.example && <span className="flashcard__example">{word.example}</span>}
       </div>
 
       <div className="progress">
@@ -101,33 +116,86 @@ export function LearnSession({ profile, onExit }: Props) {
       </div>
 
       {graded === null ? (
-        <form
-          className="answer-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-            void submit()
-          }}
-        >
-          <input
-            className="input answer-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type the German word…"
-            autoFocus
-            autoComplete="off"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-          />
-          <button type="submit" className="btn btn--primary" disabled={!input.trim()}>
-            Check
-          </button>
-        </form>
+        isIrregular ? (
+          <form
+            className="answer-form answer-form--stack"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void submit()
+            }}
+          >
+            <input
+              className="input answer-input"
+              value={pastInput}
+              onChange={(e) => setPastInput(e.target.value)}
+              placeholder="Past simple"
+              autoFocus
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            <input
+              className="input answer-input"
+              value={participleInput}
+              onChange={(e) => setParticipleInput(e.target.value)}
+              placeholder="Past participle"
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            <button
+              type="submit"
+              className="btn btn--primary"
+              disabled={!pastInput.trim() || !participleInput.trim()}
+            >
+              Check
+            </button>
+          </form>
+        ) : (
+          <form
+            className="answer-form"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void submit()
+            }}
+          >
+            <input
+              className="input answer-input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type the German word…"
+              autoFocus
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            <button type="submit" className="btn btn--primary" disabled={!input.trim()}>
+              Check
+            </button>
+          </form>
+        )
       ) : (
         <div className={`answer-feedback answer-feedback--${graded}`}>
           <div className="answer-feedback__status">{graded === 'correct' ? 'Correct!' : 'Not quite.'}</div>
           <div className="answer-feedback__correct">
-            Answer: <strong>{word.german}</strong>
+            {isIrregular ? (
+              <>
+                Answer: <strong>{word.pastSimple} · {word.pastParticiple}</strong>
+                {graded === 'wrong' && word.german && (
+                  <>
+                    <br />
+                    Meaning: <strong>{word.german}</strong>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                Answer: <strong>{word.german}</strong>
+              </>
+            )}
           </div>
           <button type="button" className="btn btn--primary" onClick={next} autoFocus>
             Next

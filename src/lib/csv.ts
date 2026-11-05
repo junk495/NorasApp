@@ -97,6 +97,7 @@ export function parseVocabCsv(text: string, profileId: number): CsvParseResult {
 
     words.push({
       profileId,
+      kind: 'word',
       english,
       german,
       example: example || undefined,
@@ -117,4 +118,53 @@ export function escapeCsvField(value: string): string {
     return '"' + value.replace(/"/g, '""') + '"'
   }
   return value
+}
+
+/** Parses an irregular-verbs CSV: infinitive,pastSimple,pastParticiple,german,note. */
+export function parseIrregularCsv(text: string, profileId: number): CsvParseResult {
+  const rows = parseCSV(text)
+  if (rows.length === 0) {
+    return { words: [], skipped: 0, errors: ['The file is empty.'], totalRows: 0 }
+  }
+
+  let startIndex = 0
+  const first = rows[0].map((c) => c.trim().toLowerCase())
+  if (first[0] === 'infinitive') {
+    startIndex = 1
+  }
+
+  const words: NewVocabulary[] = []
+  const errors: string[] = []
+  let skipped = 0
+
+  for (let i = startIndex; i < rows.length; i++) {
+    const row = rows[i]
+    const infinitive = (row[0] ?? '').trim()
+    const pastSimple = (row[1] ?? '').trim()
+    const pastParticiple = (row[2] ?? '').trim()
+    const german = (row[3] ?? '').trim()
+    const note = (row[4] ?? '').trim()
+
+    if (!infinitive || !pastSimple || !pastParticiple) {
+      skipped++
+      errors.push(`Row ${i + 1}: missing infinitive, past simple or past participle`)
+      continue
+    }
+
+    words.push({
+      profileId,
+      kind: 'irregular',
+      english: infinitive,
+      german,
+      pastSimple,
+      pastParticiple,
+      example: note || undefined,
+    })
+  }
+
+  return { words, skipped, errors, totalRows: Math.max(rows.length - startIndex, 0) }
+}
+
+export function irregularTemplate(): string {
+  return 'infinitive,pastSimple,pastParticiple,german,note\n'
 }

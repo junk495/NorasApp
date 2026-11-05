@@ -8,13 +8,23 @@ export interface Profile {
   createdAt: number
 }
 
+export type CardKind = 'word' | 'irregular'
+
 export interface Vocabulary {
   id?: number
   profileId: number
+  kind: CardKind
+  /** For "word": the English word. For "irregular": the infinitive. */
   english: string
+  /** For "word": the German translation. For "irregular": the German meaning. */
   german: string
+  /** Example sentence or comment. */
   example?: string
   category?: string
+  /** Irregular verbs only: simple past form. */
+  pastSimple?: string
+  /** Irregular verbs only: past participle form. */
+  pastParticiple?: string
   box: number
   dueDate: number
   correctCount: number
@@ -49,6 +59,21 @@ class NorasDB extends Dexie {
       vocabulary: '++id, profileId, dueDate, box, [profileId+dueDate]',
       studyStats: '++id, profileId, studyDate, [profileId+studyDate]',
     })
+
+    this.version(2)
+      .stores({
+        profiles: '++id, name',
+        vocabulary: '++id, profileId, dueDate, box, kind, [profileId+dueDate]',
+        studyStats: '++id, profileId, studyDate, [profileId+studyDate]',
+      })
+      .upgrade((tx) =>
+        tx
+          .table('vocabulary')
+          .toCollection()
+          .modify((word) => {
+            if (word.kind === undefined) word.kind = 'word'
+          }),
+      )
   }
 }
 
