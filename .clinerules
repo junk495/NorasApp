@@ -1,0 +1,24 @@
+# NorasApp – Regeln für Cline
+
+## Allgemein
+- Lies zuerst `agents.md` im Projektstamm.
+- Arbeite in kleinen, validierbaren Schritten; prüfe Änderungen (mindestens `npm run build`), bevor du die Aufgabe abschließt.
+- Verwende absolute Pfade.
+
+## Sprache
+- Code, Kommentare und Commit-Nachrichten: Englisch.
+- UI-Texte in der App: Englisch.
+
+## Versionierung
+- Version **nur** in `package.json` ändern (Muster MAJOR.MINOR.PATCH).
+- Nach einer Versionsänderung `npm run build` ausführen.
+- Die App zeigt `__APP_VERSION__` an und schlägt Updates automatisch vor – diesen Mechanismus nicht umgehen oder umbauen.
+
+## Tech
+- Stack: Vite + TypeScript + React + vite-plugin-pwa.
+- Keine neuen Libraries ohne Rücksprache oder klare Notwendigkeit.
+- TypeScript: strikt, typsicher, keine unbegründeten `any`.
+
+## Qualität
+- Kein Platzhalter-/TODO-Code ohne klare Beschreibung.
+- Nach jeder Änderung: betroffene Dateien prüfen und, wenn möglich, den Build ausführen.

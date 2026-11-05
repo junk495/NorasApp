@@ -1,0 +1,125 @@
+:root {
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --border: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #818cf8;
+  --accent-2: #a78bfa;
+  --accent-strong: #6366f1;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  min-height: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.app__header h1 {
+  margin: 0;
+  font-size: 2rem;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.app__tagline {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.app__main {
+  flex: 1;
+  margin-top: 32px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+.app__footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.update-toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 480px);
+  background: #1e1b4b;
+  border: 1px solid var(--accent-strong);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.update-toast__text {
+  font-size: 0.95rem;
+}
+
+.update-toast__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.update-toast__button {
+  border: 1px solid var(--accent-strong);
+  background: transparent;
+  color: #c7d2fe;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.update-toast__button--primary {
+  background: var(--accent-strong);
+  color: #ffffff;
+  border-color: var(--accent-strong);
+}
+
+.update-toast__button:hover {
+  filter: brightness(1.1);
+}
