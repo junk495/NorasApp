@@ -632,3 +632,53 @@ h3 {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* Answer (type-in) */
+.prompt-card {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.answer-form {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.answer-input {
+  flex: 1;
+  font-size: 1.1rem;
+}
+
+.answer-feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.answer-feedback__status {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.answer-feedback--correct .answer-feedback__status {
+  color: var(--success);
+}
+
+.answer-feedback--wrong .answer-feedback__status {
+  color: var(--danger);
+}
+
+.answer-feedback__correct {
+  color: var(--muted);
+}

@@ -3,6 +3,7 @@ import Dexie from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, recordStudy, type Profile, type Vocabulary } from '../db'
 import { gradeWord } from '../lib/leitner'
+import { answersMatch } from '../lib/answers'
 
 interface Props {
   profile: Profile
@@ -22,7 +23,8 @@ export function LearnSession({ profile, onExit }: Props) {
 
   const [queue, setQueue] = useState<Vocabulary[] | null>(null)
   const [index, setIndex] = useState(0)
-  const [revealed, setRevealed] = useState(false)
+  const [input, setInput] = useState('')
+  const [graded, setGraded] = useState<'correct' | 'wrong' | null>(null)
   const [correctCount, setCorrectCount] = useState(0)
   const [wrongCount, setWrongCount] = useState(0)
 
@@ -34,13 +36,19 @@ export function LearnSession({ profile, onExit }: Props) {
 
   const word = queue?.[index]
 
-  async function grade(correct: boolean) {
-    if (!word) return
+  async function submit() {
+    if (!word || graded) return
+    const correct = answersMatch(input, word.german)
     await db.vocabulary.update(word.id!, gradeWord(word, correct))
     await recordStudy(profileId, correct)
     if (correct) setCorrectCount((c) => c + 1)
     else setWrongCount((c) => c + 1)
-    setRevealed(false)
+    setGraded(correct ? 'correct' : 'wrong')
+  }
+
+  function next() {
+    setInput('')
+    setGraded(null)
     setIndex((i) => i + 1)
   }
 
@@ -82,39 +90,49 @@ export function LearnSession({ profile, onExit }: Props) {
         ✕
       </button>
 
-      <div className={`flashcard${revealed ? ' is-flipped' : ''}`} onClick={() => setRevealed(true)}>
-        <div className="flashcard__inner">
-          <div className="flashcard__face flashcard__front">
-            <span className="flashcard__label">English</span>
-            <span className="flashcard__word">{word.english}</span>
-            {word.example && <span className="flashcard__example">{word.example}</span>}
-            <span className="flashcard__hint">Tap to reveal</span>
-          </div>
-          <div className="flashcard__face flashcard__back">
-            <span className="flashcard__label">German</span>
-            <span className="flashcard__word">{word.german}</span>
-            {word.example && <span className="flashcard__example">{word.example}</span>}
-          </div>
-        </div>
+      <div className="card prompt-card">
+        <span className="flashcard__label">Translate to German</span>
+        <span className="flashcard__word">{word.english}</span>
+        {word.example && <span className="flashcard__example">{word.example}</span>}
       </div>
 
       <div className="progress">
         Card {index + 1} of {queue?.length}
       </div>
 
-      {revealed ? (
-        <div className="grade-actions">
-          <button type="button" className="btn btn--danger" onClick={() => grade(false)}>
-            Wrong
+      {graded === null ? (
+        <form
+          className="answer-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            void submit()
+          }}
+        >
+          <input
+            className="input answer-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type the German word…"
+            autoFocus
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+          <button type="submit" className="btn btn--primary" disabled={!input.trim()}>
+            Check
           </button>
-          <button type="button" className="btn btn--primary" onClick={() => grade(true)}>
-            Correct
+        </form>
+      ) : (
+        <div className={`answer-feedback answer-feedback--${graded}`}>
+          <div className="answer-feedback__status">{graded === 'correct' ? 'Correct!' : 'Not quite.'}</div>
+          <div className="answer-feedback__correct">
+            Answer: <strong>{word.german}</strong>
+          </div>
+          <button type="button" className="btn btn--primary" onClick={next} autoFocus>
+            Next
           </button>
         </div>
-      ) : (
-        <button type="button" className="btn btn--secondary" onClick={() => setRevealed(true)}>
-          Reveal
-        </button>
       )}
     </div>
   )

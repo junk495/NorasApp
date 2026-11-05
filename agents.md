@@ -45,6 +45,7 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 - `src/App.tsx` – Einstieg, Tab-Navigation, Profil-Verwaltung
 - `src/db.ts` – Dexie-Schema (`profiles`, `vocabulary`, `studyStats`) + Helfer
 - `src/lib/leitner.ts` – Leitner-Logik (Boxen, Intervalle, Bewertung)
+- `src/lib/answers.ts` – Antwort-Prüfung (eingetippte Übersetzung vs. Lösung, Umlaut-/Artikel-tolerant)
 - `src/lib/dates.ts` – Datums-/Streak-Helfer
 - `src/lib/csv.ts` – CSV-Parser + Import-Logik
 - `src/components/` – UI-Komponenten (Dashboard, LearnSession, VocabManager, Profile, Import, UpdatePrompt)
