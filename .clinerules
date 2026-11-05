@@ -11,8 +11,9 @@
 
 ## Versionierung
 - Version **nur** in `package.json` ändern (Muster MAJOR.MINOR.PATCH).
+- **Bei jeder Änderung, die deployed wird, MUSS die Version erhöht werden.**
 - Nach einer Versionsänderung `npm run build` ausführen.
-- Die App zeigt `__APP_VERSION__` an und schlägt Updates automatisch vor – diesen Mechanismus nicht umgehen oder umbauen.
+- Die App prüft per Service Worker automatisch auf neue Versionen und schlägt Updates vor – diesen Mechanismus nicht umgehen oder umbauen.
 
 ## Tech
 - Stack: Vite + TypeScript + React + vite-plugin-pwa.

@@ -27,14 +27,15 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 ## Versionierung (Muster 0.0.0 / SemVer)
 - **Einzige Quelle der Wahrheit** ist das Feld `version` in `package.json`.
 - Muster: `MAJOR.MINOR.PATCH` (z. B. `0.0.1` → `0.1.0` → `1.0.0`).
-- Nach einer Versionserhöhung immer `npm run build` ausführen.
+- **Bei JEDER Änderung, die deployed wird, MUSS die Version erhöht werden** – sonst erkennt der Service Worker keinen Unterschied und die Nutzer erhalten kein Update.
+- Nach einer Versionserhöhung committen + pushen (der GitHub-Actions-Workflow baut und deployed dann automatisch).
 - Die Version wird über `__APP_VERSION__` (siehe `vite.config.cts` → `define`) in die App eingebettet und in der UI angezeigt.
 - Da die Version in den Bundle-Hash einfließt, erkennt der Service Worker die Änderung automatisch und zeigt dem Nutzer einen Update-Hinweis an.
 
 ## Auto-Update-Mechanik
 - `vite.config.cts`: `registerType: 'prompt'`.
 - Die Vite-Config läuft bewusst als CommonJS (`.cts`), weil `vite-plugin-pwa` `workbox-build` über einen `require()`-Fallback lädt. Dadurch erscheint beim Build ein harmloser „CJS deprecation“-Hinweis von Vite.
-- `src/components/UpdatePrompt.tsx`: nutzt `useRegisterSW` aus `virtual:pwa-register/react` und zeigt bei `needRefresh` den Hinweis „A new version is available“ mit „Update“-Button (`updateServiceWorker(true)`).
+- `src/components/UpdatePrompt.tsx`: nutzt `useRegisterSW` aus `virtual:pwa-register/react`. Prüft regelmäßig (per `registration.update()`), ob eine neue Version existiert, und zeigt bei `needRefresh` den Hinweis „A new version is available“ mit „Update“-Button (`updateServiceWorker(true)`).
 
 ## CSV-Import (Format)
 - Erwartete Spalten: `english,german,example,category` (Kopfzeile optional).
