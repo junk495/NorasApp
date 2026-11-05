@@ -7,7 +7,9 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 ## Tech-Stack
 - Vite + TypeScript + React (JSX mit `react-jsx`)
 - `vite-plugin-pwa` (Manifest + Service Worker, offline-fähig, installierbar)
+- `dexie` + `dexie-react-hooks` (IndexedDB, lokal & offline)
 - Keine Backend-Pflicht: alle Daten bleiben lokal im Browser
+- **Keine eingebauten Standardvokabeln** – Wortschatz wird ausschließlich per CSV-Import oder Einzel-Eingabe angelegt
 
 ## Wichtige Befehle
 - `npm run dev` – Entwicklungsserver starten
@@ -27,9 +29,18 @@ Aktueller Fokus: **Englisch-Vokabeln**. Zielgruppe: allgemein, mehrere Personen 
 - Die Vite-Config läuft bewusst als CommonJS (`.cts`), weil `vite-plugin-pwa` `workbox-build` über einen `require()`-Fallback lädt. Dadurch erscheint beim Build ein harmloser „CJS deprecation“-Hinweis von Vite.
 - `src/components/UpdatePrompt.tsx`: nutzt `useRegisterSW` aus `virtual:pwa-register/react` und zeigt bei `needRefresh` den Hinweis „A new version is available“ mit „Update“-Button (`updateServiceWorker(true)`).
 
+## CSV-Import (Format)
+- Erwartete Spalten: `english,german,example,category` (Kopfzeile optional).
+- Trennzeichen wird automatisch erkannt (Komma, Semikolon oder Tab); Anführungszeichen werden unterstützt.
+- Es gibt **keine** mitgelieferten Standardvokabeln – der Wortschatz wird ausschließlich importiert oder einzeln angelegt.
+
 ## Projektstruktur
-- `src/App.tsx` – Einstieg + UI-Grundgerüst
-- `src/components/` – wiederverwendbare Komponenten (z. B. `UpdatePrompt`)
+- `src/App.tsx` – Einstieg, Tab-Navigation, Profil-Verwaltung
+- `src/db.ts` – Dexie-Schema (`profiles`, `vocabulary`, `studyStats`) + Helfer
+- `src/lib/leitner.ts` – Leitner-Logik (Boxen, Intervalle, Bewertung)
+- `src/lib/dates.ts` – Datums-/Streak-Helfer
+- `src/lib/csv.ts` – CSV-Parser + Import-Logik
+- `src/components/` – UI-Komponenten (Dashboard, LearnSession, VocabManager, Profile, Import, UpdatePrompt)
 - `src/vite-env.d.ts` – globale Typen (`__APP_VERSION__`, PWA-Referenzen)
 - `public/icons/` – App-Icons (SVG-Quellen + generierte PNGs)
 - `scripts/generate-icons.mjs` – erzeugt PNGs aus den SVGs
