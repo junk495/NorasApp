@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { countDuplicateVocabulary, db, deduplicateVocabulary, type CardKind, type Profile, type Vocabulary } from '../db'
+import { tagsOf } from '../lib/tags'
 import { ImportDialog } from './ImportDialog'
 import { LoadState } from './LoadState'
 import { VocabForm } from './VocabForm'
@@ -16,18 +17,18 @@ export function VocabManager({ profile }: Props) {
   const words = useLiveQuery(() => db.vocabulary.where('profileId').equals(profileId).toArray(), [profileId])
 
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('all')
+  const [tagFilter, setTagFilter] = useState('all')
   const [kindFilter, setKindFilter] = useState<'all' | CardKind>('all')
   const [showImport, setShowImport] = useState(false)
   const [creating, setCreating] = useState<CardKind | null>(null)
   const [editing, setEditing] = useState<Vocabulary | null>(null)
 
-  const categories = useMemo(() => {
+  const allTags = useMemo(() => {
     const set = new Set<string>()
     words?.forEach((w) => {
-      if (w.category) set.add(w.category)
+      for (const tag of tagsOf(w)) set.add(tag)
     })
-    return Array.from(set).sort()
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
   }, [words])
 
   const filtered = useMemo(() => {
@@ -40,12 +41,12 @@ export function VocabManager({ profile }: Props) {
         w.german.toLowerCase().includes(q) ||
         (w.pastSimple ?? '').toLowerCase().includes(q) ||
         (w.pastParticiple ?? '').toLowerCase().includes(q) ||
-        (w.category ?? '').toLowerCase().includes(q)
-      const matchesCategory = category === 'all' || w.category === category
+        tagsOf(w).some((t) => t.toLowerCase().includes(q))
+      const matchesTag = tagFilter === 'all' || tagsOf(w).some((t) => t.toLowerCase() === tagFilter.toLowerCase())
       const matchesKind = kindFilter === 'all' || w.kind === kindFilter
-      return matchesSearch && matchesCategory && matchesKind
+      return matchesSearch && matchesTag && matchesKind
     })
-  }, [words, search, category, kindFilter])
+  }, [words, search, tagFilter, kindFilter])
 
   async function removeWord(id: number) {
     if (!window.confirm('Delete this entry?')) return
@@ -98,13 +99,14 @@ export function VocabManager({ profile }: Props) {
 
   const wordCount = words.filter((w) => w.kind === 'word').length
   const verbCount = words.filter((w) => w.kind === 'irregular').length
+  const phraseCount = words.filter((w) => w.kind === 'phrase').length
 
   return (
     <section>
       <div className="section-head">
         <h2>Vocabulary</h2>
         <span className="muted">
-          {wordCount} words · {verbCount} verbs
+          {wordCount} words · {verbCount} verbs · {phraseCount} phrases
         </span>
       </div>
 
@@ -115,11 +117,11 @@ export function VocabManager({ profile }: Props) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <select className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option value="all">All categories</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c}
+        <select className="input" value={tagFilter} onChange={(e) => setTagFilter(e.target.value)}>
+          <option value="all">All tags</option>
+          {allTags.map((t) => (
+            <option key={t} value={t}>
+              {t}
             </option>
           ))}
         </select>
@@ -131,6 +133,7 @@ export function VocabManager({ profile }: Props) {
           <option value="all">All types</option>
           <option value="word">Words</option>
           <option value="irregular">Verbs</option>
+          <option value="phrase">Phrases</option>
         </select>
       </div>
 
@@ -140,6 +143,9 @@ export function VocabManager({ profile }: Props) {
         </button>
         <button type="button" className="btn btn--primary" onClick={() => setCreating('irregular')}>
           Add verb
+        </button>
+        <button type="button" className="btn btn--primary" onClick={() => setCreating('phrase')}>
+          Add phrase
         </button>
         <button type="button" className="btn" onClick={addCommonVerbs}>
           Add common verbs
@@ -186,7 +192,12 @@ export function VocabManager({ profile }: Props) {
                 )}
                 {w.example && <span className="vocab-item__example">{w.example}</span>}
                 {w.kind === 'irregular' && <span className="badge badge--verb">verb</span>}
-                {w.category && <span className="badge">{w.category}</span>}
+                {w.kind === 'phrase' && <span className="badge badge--phrase">phrase</span>}
+                {tagsOf(w).map((tag) => (
+                  <span key={tag} className="badge">
+                    {tag}
+                  </span>
+                ))}
               </div>
               <div className="vocab-item__actions">
                 <button type="button" className="icon-button" onClick={() => setEditing(w)} aria-label="Edit">

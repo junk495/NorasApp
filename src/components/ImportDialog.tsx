@@ -71,8 +71,10 @@ export function ImportDialog({ profile, onClose }: Props) {
 
   const wordCount = cards.filter((c) => c.kind === 'word').length
   const verbCount = cards.filter((c) => c.kind === 'irregular').length
+  const phraseCount = cards.filter((c) => c.kind === 'phrase').length
   const restoreWordCount = restoreData?.vocabulary.filter((v) => v.kind === 'word').length ?? 0
   const restoreVerbCount = restoreData?.vocabulary.filter((v) => v.kind === 'irregular').length ?? 0
+  const restorePhraseCount = restoreData?.vocabulary.filter((v) => v.kind === 'phrase').length ?? 0
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -103,7 +105,8 @@ export function ImportDialog({ profile, onClose }: Props) {
                 File: <strong>{fileName}</strong>
               </p>
               <p>
-                Words: <strong>{wordCount}</strong> · Verbs: <strong>{verbCount}</strong>
+                Words: <strong>{wordCount}</strong> · Verbs: <strong>{verbCount}</strong> · Phrases:{' '}
+                <strong>{phraseCount}</strong>
               </p>
               {skipped > 0 && <p>Skipped rows: {skipped}</p>}
             </div>
@@ -136,7 +139,8 @@ export function ImportDialog({ profile, onClose }: Props) {
                 Profiles: <strong>{restoreData.profiles.length}</strong>
               </p>
               <p>
-                Words: <strong>{restoreWordCount}</strong> · Verbs: <strong>{restoreVerbCount}</strong>
+                Words: <strong>{restoreWordCount}</strong> · Verbs: <strong>{restoreVerbCount}</strong> · Phrases:{' '}
+                <strong>{restorePhraseCount}</strong>
               </p>
             </div>
             <p className="import-warning">This replaces all current data. Continue?</p>

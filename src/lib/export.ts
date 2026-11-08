@@ -1,4 +1,4 @@
-import { db, type NewVocabulary, type Profile, type StudyStats, type Vocabulary } from '../db'
+import { db, type CardKind, type NewVocabulary, type Profile, type StudyStats, type Vocabulary } from '../db'
 
 export interface BackupData {
   app: string
@@ -11,13 +11,15 @@ export interface BackupData {
 
 /** A single card as it may appear in a simple JSON list (words and verbs). */
 export interface SimpleCard {
-  kind?: 'word' | 'irregular'
+  kind?: CardKind
   english?: string
   /** Alias for `english` (used for verbs). */
   infinitive?: string
   german?: string
   example?: string
+  /** @deprecated Legacy single category, mapped to `tags` on import. */
   category?: string
+  tags?: string[]
   pastSimple?: string
   pastParticiple?: string
 }
@@ -80,21 +82,31 @@ export function cardsToVocabulary(cards: SimpleCard[], profileId: number): { val
     const german = (card.german ?? '').trim()
     const pastSimple = (card.pastSimple ?? '').trim()
     const pastParticiple = (card.pastParticiple ?? '').trim()
-    const isIrregular = card.kind === 'irregular' || Boolean(pastSimple) || Boolean(pastParticiple)
+    const tags = resolveTags(card.tags, card.category)
 
-    if (isIrregular) {
+    let kind: CardKind
+    if (card.kind === 'irregular' || (card.kind !== 'phrase' && (Boolean(pastSimple) || Boolean(pastParticiple)))) {
+      kind = 'irregular'
+    } else if (card.kind === 'phrase') {
+      kind = 'phrase'
+    } else {
+      kind = 'word'
+    }
+
+    if (kind === 'irregular') {
       if (!base || !pastSimple || !pastParticiple) {
         skipped++
         continue
       }
       valid.push({
         profileId,
-        kind: 'irregular',
+        kind,
         english: base,
         german,
         pastSimple,
         pastParticiple,
         example: card.example?.trim() || undefined,
+        tags,
       })
     } else {
       if (!base || !german) {
@@ -103,16 +115,26 @@ export function cardsToVocabulary(cards: SimpleCard[], profileId: number): { val
       }
       valid.push({
         profileId,
-        kind: 'word',
+        kind,
         english: base,
         german,
         example: card.example?.trim() || undefined,
-        category: card.category?.trim() || undefined,
+        tags,
       })
     }
   }
 
   return { valid, skipped }
+}
+
+/** Merges a card's tags and legacy category into a single tag list (or undefined). */
+function resolveTags(tags?: string[], category?: string): string[] | undefined {
+  if (tags && tags.length > 0) {
+    const cleaned = tags.map((t) => t.trim()).filter(Boolean)
+    if (cleaned.length > 0) return cleaned
+  }
+  const single = category?.trim()
+  return single ? [single] : undefined
 }
 
 /** Adds vocabulary rows with fresh Leitner state (due immediately), skipping duplicates. */
@@ -179,11 +201,11 @@ function normalizeVocabulary(v: Partial<Vocabulary>): Vocabulary {
   return {
     id: v.id,
     profileId: Number(v.profileId) || 0,
-    kind: v.kind === 'irregular' ? 'irregular' : 'word',
+    kind: v.kind === 'irregular' ? 'irregular' : v.kind === 'phrase' ? 'phrase' : 'word',
     english: v.english ?? '',
     german: v.german ?? '',
     example: v.example,
-    category: v.category,
+    tags: resolveTags(v.tags, v.category),
     pastSimple: v.pastSimple,
     pastParticiple: v.pastParticiple,
     box: Number(v.box) || 1,

@@ -125,7 +125,13 @@ export function LearnSession({ profile, box, includeNotDue = false, onExit }: Pr
       <div className="card prompt-card">
         <span className="badge box-badge">Box {word.box}</span>
         <span className="flashcard__label">
-          {isIrregular ? (needsParticiple ? 'Past simple & past participle' : 'Past simple') : 'Translate to German'}
+          {isIrregular
+            ? needsParticiple
+              ? 'Past simple & past participle'
+              : 'Past simple'
+            : word.kind === 'phrase'
+              ? 'Translate the sentence'
+              : 'Translate to German'}
         </span>
         <span className="flashcard__word">{word.english}</span>
         {!isIrregular && word.example && <span className="flashcard__example">{word.example}</span>}

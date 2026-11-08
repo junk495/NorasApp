@@ -10,19 +10,22 @@ export interface Profile {
   quizParticiple?: boolean
 }
 
-export type CardKind = 'word' | 'irregular'
+export type CardKind = 'word' | 'irregular' | 'phrase'
 
 export interface Vocabulary {
   id?: number
   profileId: number
   kind: CardKind
-  /** For "word": the English word. For "irregular": the infinitive. */
+  /** For "word": the English word. For "irregular": the infinitive. For "phrase": the full sentence. */
   english: string
-  /** For "word": the German translation. For "irregular": the German meaning. */
+  /** For "word": the German translation. For "irregular": the German meaning. For "phrase": the translation. */
   german: string
   /** Example sentence or comment. */
   example?: string
+  /** @deprecated Legacy single category, replaced by `tags`. Kept for old entries. */
   category?: string
+  /** Free-form content tags (topic, unit, ...). */
+  tags?: string[]
   /** Irregular verbs only: simple past form. */
   pastSimple?: string
   /** Irregular verbs only: past participle form. */

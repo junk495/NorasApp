@@ -734,6 +734,11 @@ h3 {
   color: #a5f3fc;
 }
 
+.badge--phrase {
+  background: #4c1d95;
+  color: #ddd6fe;
+}
+
 .import-error {
   color: var(--danger);
 }
