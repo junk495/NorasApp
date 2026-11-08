@@ -26,6 +26,8 @@ export interface Vocabulary {
   category?: string
   /** Free-form content tags (topic, unit, ...). */
   tags?: string[]
+  /** Phrases only: the key word to fill in (blank answer). */
+  blank?: string
   /** Irregular verbs only: simple past form. */
   pastSimple?: string
   /** Irregular verbs only: past participle form. */

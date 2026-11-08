@@ -587,6 +587,12 @@ h3 {
   max-width: 90%;
 }
 
+.flashcard__blank {
+  color: var(--text);
+  font-size: 1.1rem;
+  max-width: 90%;
+}
+
 .flashcard__hint {
   color: var(--muted);
   font-size: 0.75rem;

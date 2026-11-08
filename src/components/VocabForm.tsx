@@ -24,6 +24,7 @@ export function VocabForm({ profile, kind, initial, onClose }: Props) {
   const [pastParticiple, setPastParticiple] = useState(initial?.pastParticiple ?? '')
   const [example, setExample] = useState(initial?.example ?? '')
   const [tags, setTags] = useState(formatTags(initial?.tags ?? (initial?.category ? [initial.category] : [])))
+  const [blank, setBlank] = useState(initial?.blank ?? '')
 
   const canSubmit = isIrregular
     ? Boolean(english.trim() && pastSimple.trim() && pastParticiple.trim())
@@ -44,7 +45,9 @@ export function VocabForm({ profile, kind, initial, onClose }: Props) {
             pastSimple: pastSimple.trim(),
             pastParticiple: pastParticiple.trim(),
           }
-        : {}),
+        : isPhrase
+          ? { blank: blank.trim() || undefined }
+          : {}),
     }
 
     if (initial?.id != null) {
@@ -101,6 +104,12 @@ export function VocabForm({ profile, kind, initial, onClose }: Props) {
               {isPhrase ? 'Translation (German)' : 'German'}
               <input className="input" value={german} onChange={(e) => setGerman(e.target.value)} />
             </label>
+            {isPhrase && (
+              <label>
+                Key word (blank, optional)
+                <input className="input" value={blank} onChange={(e) => setBlank(e.target.value)} placeholder="los" />
+              </label>
+            )}
           </>
         )}
 

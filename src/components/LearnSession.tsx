@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, recordStudy, type Profile, type Vocabulary } from '../db'
 import { gradeWord } from '../lib/leitner'
-import { answersMatch } from '../lib/answers'
+import { answersMatch, maskBlank } from '../lib/answers'
 import { LoadState } from './LoadState'
 
 interface Props {
@@ -51,6 +51,8 @@ export function LearnSession({ profile, box, includeNotDue = false, onExit }: Pr
       const pastOk = answersMatch(pastInput, word.pastSimple ?? '')
       const participleOk = !quizParticiple || answersMatch(participleInput, word.pastParticiple ?? '')
       correct = pastOk && participleOk
+    } else if (word.kind === 'phrase' && word.blank) {
+      correct = answersMatch(input, word.blank)
     } else {
       correct = answersMatch(input, word.german)
     }
@@ -110,6 +112,8 @@ export function LearnSession({ profile, box, includeNotDue = false, onExit }: Pr
   }
 
   const isIrregular = word.kind === 'irregular'
+  const isBlankPhrase = word.kind === 'phrase' && Boolean(word.blank?.trim())
+  const blankPromptText = isBlankPhrase ? maskBlank(word.german, word.blank!) : null
   const needsParticiple =
     isIrregular &&
     profile.quizParticiple !== false &&
@@ -129,12 +133,19 @@ export function LearnSession({ profile, box, includeNotDue = false, onExit }: Pr
             ? needsParticiple
               ? 'Past simple & past participle'
               : 'Past simple'
-            : word.kind === 'phrase'
-              ? 'Translate the sentence'
-              : 'Translate to German'}
+            : isBlankPhrase
+              ? 'Fill in the blank'
+              : word.kind === 'phrase'
+                ? 'Translate the sentence'
+                : 'Translate to German'}
         </span>
         <span className="flashcard__word">{word.english}</span>
-        {!isIrregular && word.example && <span className="flashcard__example">{word.example}</span>}
+        {isBlankPhrase && blankPromptText && (
+          <span className="flashcard__example flashcard__blank">{blankPromptText}</span>
+        )}
+        {!isIrregular && !isBlankPhrase && word.example && (
+          <span className="flashcard__example">{word.example}</span>
+        )}
       </div>
 
       <div className="progress">
@@ -193,7 +204,9 @@ export function LearnSession({ profile, box, includeNotDue = false, onExit }: Pr
               className="input answer-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type the German word…"
+              placeholder={
+                isBlankPhrase ? 'Missing word…' : word.kind === 'phrase' ? 'Type the German sentence…' : 'Type the German word…'
+              }
               autoFocus
               autoComplete="off"
               autoCapitalize="off"
@@ -216,6 +229,16 @@ export function LearnSession({ profile, box, includeNotDue = false, onExit }: Pr
                   <>
                     <br />
                     Meaning: <strong>{word.german}</strong>
+                  </>
+                )}
+              </>
+            ) : isBlankPhrase ? (
+              <>
+                Answer: <strong>{word.blank}</strong>
+                {word.german && (
+                  <>
+                    {' '}
+                    · <span className="muted">{word.german}</span>
                   </>
                 )}
               </>

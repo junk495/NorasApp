@@ -40,3 +40,12 @@ export function answersMatch(typed: string, correct: string): boolean {
 
   return alternatives.some((alt) => alt === typedNorm)
 }
+
+/** Replaces the first (case-insensitive) occurrence of `blank` in `german` with a gap, or null if not found. */
+export function maskBlank(german: string, blank: string): string | null {
+  const needle = blank.trim()
+  if (!needle) return null
+  const idx = german.toLowerCase().indexOf(needle.toLowerCase())
+  if (idx < 0) return null
+  return german.slice(0, idx) + '___' + german.slice(idx + needle.length)
+}

@@ -20,6 +20,8 @@ export interface SimpleCard {
   /** @deprecated Legacy single category, mapped to `tags` on import. */
   category?: string
   tags?: string[]
+  /** Phrases only: the key word to fill in (blank answer). */
+  blank?: string
   pastSimple?: string
   pastParticiple?: string
 }
@@ -120,6 +122,7 @@ export function cardsToVocabulary(cards: SimpleCard[], profileId: number): { val
         german,
         example: card.example?.trim() || undefined,
         tags,
+        ...(kind === 'phrase' ? { blank: card.blank?.trim() || undefined } : {}),
       })
     }
   }
@@ -206,6 +209,7 @@ function normalizeVocabulary(v: Partial<Vocabulary>): Vocabulary {
     german: v.german ?? '',
     example: v.example,
     tags: resolveTags(v.tags, v.category),
+    blank: v.blank,
     pastSimple: v.pastSimple,
     pastParticiple: v.pastParticiple,
     box: Number(v.box) || 1,
