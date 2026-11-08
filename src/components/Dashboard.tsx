@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Profile } from '../db'
 import { calcStreak, todayKey } from '../lib/dates'
 import { MAX_BOX } from '../lib/leitner'
+import { LoadState } from './LoadState'
 
 interface Props {
   profile: Profile
@@ -15,7 +16,7 @@ export function Dashboard({ profile, onStart, onGoVocab }: Props) {
   const studyRows = useLiveQuery(() => db.studyStats.where('profileId').equals(profileId).toArray(), [profileId])
 
   if (!words || !studyRows) {
-    return <div className="loading">Loading…</div>
+    return <LoadState />
   }
 
   const now = Date.now()

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type CardKind, type Profile, type Vocabulary } from '../db'
 import { ImportDialog } from './ImportDialog'
+import { LoadState } from './LoadState'
 import { VocabForm } from './VocabForm'
 import { addCardsToProfile, buildBackup, downloadTextFile } from '../lib/export'
 import { COMMON_IRREGULAR_VERBS } from '../data/irregularVerbs'
@@ -78,7 +79,7 @@ export function VocabManager({ profile }: Props) {
   }
 
   if (!words) {
-    return <div className="loading">Loading…</div>
+    return <LoadState />
   }
 
   const wordCount = words.filter((w) => w.kind === 'word').length

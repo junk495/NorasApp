@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
 import { Dashboard } from './components/Dashboard'
 import { LearnSession } from './components/LearnSession'
+import { LoadState } from './components/LoadState'
 import { VocabManager } from './components/VocabManager'
 import { ProfilesView } from './components/ProfilesView'
 import { ProfileForm } from './components/ProfileForm'
@@ -41,7 +42,7 @@ export default function App() {
   if (!profiles) {
     return (
       <div className="app">
-        <div className="loading">Loading…</div>
+        <LoadState />
       </div>
     )
   }

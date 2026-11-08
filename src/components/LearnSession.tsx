@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import Dexie from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, recordStudy, type Profile, type Vocabulary } from '../db'
 import { gradeWord } from '../lib/leitner'
 import { answersMatch } from '../lib/answers'
+import { LoadState } from './LoadState'
 
 interface Props {
   profile: Profile
@@ -12,12 +12,8 @@ interface Props {
 
 export function LearnSession({ profile, onExit }: Props) {
   const profileId = profile.id!
-  const dueWords = useLiveQuery(
-    () =>
-      db.vocabulary
-        .where('[profileId+dueDate]')
-        .between([profileId, Dexie.minKey], [profileId, Date.now()], true, true)
-        .toArray(),
+  const words = useLiveQuery(
+    () => db.vocabulary.where('profileId').equals(profileId).toArray(),
     [profileId],
   )
 
@@ -31,10 +27,11 @@ export function LearnSession({ profile, onExit }: Props) {
   const [wrongCount, setWrongCount] = useState(0)
 
   useEffect(() => {
-    if (dueWords && queue === null) {
-      setQueue(shuffle(dueWords))
+    if (words && queue === null) {
+      const due = words.filter((w) => w.dueDate <= Date.now())
+      setQueue(shuffle(due))
     }
-  }, [dueWords, queue])
+  }, [words, queue])
 
   const word = queue?.[index]
 
@@ -65,8 +62,8 @@ export function LearnSession({ profile, onExit }: Props) {
     setIndex((i) => i + 1)
   }
 
-  if (!dueWords) {
-    return <div className="loading">Loading…</div>
+  if (!words) {
+    return <LoadState />
   }
 
   if (queue && index >= queue.length) {

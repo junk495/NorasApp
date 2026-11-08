@@ -152,6 +152,14 @@ h3 {
   text-align: center;
 }
 
+.error-state {
+  text-align: center;
+}
+
+.error-state .btn {
+  margin-top: 8px;
+}
+
 .success {
   color: var(--success);
 }
