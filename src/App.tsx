@@ -23,6 +23,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('learn')
   const [inSession, setInSession] = useState(false)
   const [startBox, setStartBox] = useState<number | null>(null)
+  const [startIncludeNotDue, setStartIncludeNotDue] = useState(false)
 
   useEffect(() => {
     if (!profiles) return
@@ -81,14 +82,20 @@ export default function App() {
 
       <main className="app__main">
         {inSession ? (
-          <LearnSession profile={activeProfile} box={startBox} onExit={() => setInSession(false)} />
+          <LearnSession
+            profile={activeProfile}
+            box={startBox}
+            includeNotDue={startIncludeNotDue}
+            onExit={() => setInSession(false)}
+          />
         ) : (
           <>
             {tab === 'learn' && (
               <Dashboard
                 profile={activeProfile}
-                onStart={(box) => {
+                onStart={(box, includeNotDue) => {
                   setStartBox(box)
+                  setStartIncludeNotDue(includeNotDue)
                   setInSession(true)
                 }}
                 onGoVocab={() => setTab('vocab')}

@@ -9,10 +9,12 @@ interface Props {
   profile: Profile
   /** Only quiz cards currently in this box (null = all boxes). */
   box: number | null
+  /** When true, also include cards that are not due yet (practice anyway). */
+  includeNotDue?: boolean
   onExit: () => void
 }
 
-export function LearnSession({ profile, box, onExit }: Props) {
+export function LearnSession({ profile, box, includeNotDue = false, onExit }: Props) {
   const profileId = profile.id!
   const words = useLiveQuery(
     () => db.vocabulary.where('profileId').equals(profileId).toArray(),
@@ -31,10 +33,12 @@ export function LearnSession({ profile, box, onExit }: Props) {
   useEffect(() => {
     if (words && queue === null) {
       const now = Date.now()
-      const due = words.filter((w) => w.dueDate <= now && (box === null || w.box === box))
-      setQueue(shuffle(due))
+      const selected = words.filter(
+        (w) => (box === null || w.box === box) && (includeNotDue || w.dueDate <= now),
+      )
+      setQueue(shuffle(selected))
     }
-  }, [words, queue, box])
+  }, [words, queue, box, includeNotDue])
 
   const word = queue?.[index]
 
@@ -85,9 +89,17 @@ export function LearnSession({ profile, box, onExit }: Props) {
 
   if (!word) {
     if (queue && queue.length === 0) {
+      const emptyMessage =
+        box === null
+          ? includeNotDue
+            ? 'No words to review.'
+            : 'No words are due right now.'
+          : includeNotDue
+            ? `No cards in Box ${box}.`
+            : `No due cards in Box ${box} right now.`
       return (
         <div className="card">
-          <p>{box === null ? 'No words are due right now.' : `No due cards in Box ${box} right now.`}</p>
+          <p>{emptyMessage}</p>
           <button type="button" className="btn btn--primary" onClick={onExit}>
             Back
           </button>

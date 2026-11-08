@@ -7,7 +7,7 @@ import { LoadState } from './LoadState'
 
 interface Props {
   profile: Profile
-  onStart: (box: number | null) => void
+  onStart: (box: number | null, includeNotDue: boolean) => void
   onGoVocab: () => void
 }
 
@@ -36,6 +36,7 @@ export function Dashboard({ profile, onStart, onGoVocab }: Props) {
     if (w.dueDate <= now) dueByBox[box]++
   }
   const activeDueCount = selectedBox === null ? dueCount : dueByBox[selectedBox]
+  const activeBoxCount = selectedBox === null ? total : boxCounts[selectedBox]
 
   return (
     <section>
@@ -99,11 +100,22 @@ export function Dashboard({ profile, onStart, onGoVocab }: Props) {
           <p>
             {selectedBox === null
               ? 'All caught up — nothing is due right now.'
-              : `No due cards in Box ${selectedBox} right now.`}
+              : activeBoxCount === 0
+                ? `No cards in Box ${selectedBox} yet.`
+                : `No due cards in Box ${selectedBox} right now.`}
           </p>
+          {activeBoxCount > 0 && (
+            <button
+              type="button"
+              className="btn btn--primary btn--block"
+              onClick={() => onStart(selectedBox, true)}
+            >
+              {selectedBox === null ? 'Review all anyway' : `Practice Box ${selectedBox} anyway`}
+            </button>
+          )}
         </div>
       ) : (
-        <button type="button" className="btn btn--primary btn--block" onClick={() => onStart(selectedBox)}>
+        <button type="button" className="btn btn--primary btn--block" onClick={() => onStart(selectedBox, false)}>
           {selectedBox === null ? 'Start learning' : `Learn Box ${selectedBox}`} ({activeDueCount})
         </button>
       )}
