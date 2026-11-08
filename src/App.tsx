@@ -22,6 +22,7 @@ export default function App() {
   })
   const [tab, setTab] = useState<Tab>('learn')
   const [inSession, setInSession] = useState(false)
+  const [startBox, setStartBox] = useState<number | null>(null)
 
   useEffect(() => {
     if (!profiles) return
@@ -80,13 +81,16 @@ export default function App() {
 
       <main className="app__main">
         {inSession ? (
-          <LearnSession profile={activeProfile} onExit={() => setInSession(false)} />
+          <LearnSession profile={activeProfile} box={startBox} onExit={() => setInSession(false)} />
         ) : (
           <>
             {tab === 'learn' && (
               <Dashboard
                 profile={activeProfile}
-                onStart={() => setInSession(true)}
+                onStart={(box) => {
+                  setStartBox(box)
+                  setInSession(true)
+                }}
                 onGoVocab={() => setTab('vocab')}
               />
             )}

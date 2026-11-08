@@ -242,6 +242,30 @@ h3 {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 4px;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.box:hover {
+  filter: brightness(1.12);
+}
+
+.box.is-selected {
+  border-color: var(--accent-strong);
+  background: #312e81;
+}
+
+.box__due {
+  display: block;
+  color: var(--muted);
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+
+.box-hint {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
 }
 
 .box__count {
@@ -398,6 +422,12 @@ h3 {
   padding: 2px 8px;
   font-size: 0.72rem;
   margin-top: 2px;
+}
+
+.box-badge {
+  align-self: center;
+  background: #164e63;
+  color: #a5f3fc;
 }
 
 /* Icon button */

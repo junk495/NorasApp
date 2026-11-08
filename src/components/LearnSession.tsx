@@ -7,10 +7,12 @@ import { LoadState } from './LoadState'
 
 interface Props {
   profile: Profile
+  /** Only quiz cards currently in this box (null = all boxes). */
+  box: number | null
   onExit: () => void
 }
 
-export function LearnSession({ profile, onExit }: Props) {
+export function LearnSession({ profile, box, onExit }: Props) {
   const profileId = profile.id!
   const words = useLiveQuery(
     () => db.vocabulary.where('profileId').equals(profileId).toArray(),
@@ -28,10 +30,11 @@ export function LearnSession({ profile, onExit }: Props) {
 
   useEffect(() => {
     if (words && queue === null) {
-      const due = words.filter((w) => w.dueDate <= Date.now())
+      const now = Date.now()
+      const due = words.filter((w) => w.dueDate <= now && (box === null || w.box === box))
       setQueue(shuffle(due))
     }
-  }, [words, queue])
+  }, [words, queue, box])
 
   const word = queue?.[index]
 
@@ -84,7 +87,7 @@ export function LearnSession({ profile, onExit }: Props) {
     if (queue && queue.length === 0) {
       return (
         <div className="card">
-          <p>No words are due right now.</p>
+          <p>{box === null ? 'No words are due right now.' : `No due cards in Box ${box} right now.`}</p>
           <button type="button" className="btn btn--primary" onClick={onExit}>
             Back
           </button>
@@ -108,6 +111,7 @@ export function LearnSession({ profile, onExit }: Props) {
       </button>
 
       <div className="card prompt-card">
+        <span className="badge box-badge">Box {word.box}</span>
         <span className="flashcard__label">
           {isIrregular ? (needsParticiple ? 'Past simple & past participle' : 'Past simple') : 'Translate to German'}
         </span>

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Profile } from '../db'
 import { calcStreak, todayKey } from '../lib/dates'
@@ -6,11 +7,12 @@ import { LoadState } from './LoadState'
 
 interface Props {
   profile: Profile
-  onStart: () => void
+  onStart: (box: number | null) => void
   onGoVocab: () => void
 }
 
 export function Dashboard({ profile, onStart, onGoVocab }: Props) {
+  const [selectedBox, setSelectedBox] = useState<number | null>(null)
   const profileId = profile.id!
   const words = useLiveQuery(() => db.vocabulary.where('profileId').equals(profileId).toArray(), [profileId])
   const studyRows = useLiveQuery(() => db.studyStats.where('profileId').equals(profileId).toArray(), [profileId])
@@ -27,10 +29,13 @@ export function Dashboard({ profile, onStart, onGoVocab }: Props) {
   const streak = calcStreak(new Set(studyRows.map((r) => r.studyDate)))
 
   const boxCounts = new Array<number>(MAX_BOX + 1).fill(0)
+  const dueByBox = new Array<number>(MAX_BOX + 1).fill(0)
   for (const w of words) {
     const box = Math.min(Math.max(w.box, 1), MAX_BOX)
     boxCounts[box]++
+    if (w.dueDate <= now) dueByBox[box]++
   }
+  const activeDueCount = selectedBox === null ? dueCount : dueByBox[selectedBox]
 
   return (
     <section>
@@ -58,13 +63,27 @@ export function Dashboard({ profile, onStart, onGoVocab }: Props) {
       <div className="card box-panel">
         <h3>Boxes</h3>
         <div className="box-row">
-          {boxCounts.slice(1).map((count, i) => (
-            <div key={i} className="box">
-              <span className="box__count">{count}</span>
-              <span className="box__label">Box {i + 1}</span>
-            </div>
-          ))}
+          {boxCounts.slice(1).map((count, i) => {
+            const box = i + 1
+            const isSelected = selectedBox === box
+            return (
+              <button
+                key={box}
+                type="button"
+                className={`box${isSelected ? ' is-selected' : ''}`}
+                onClick={() => setSelectedBox(isSelected ? null : box)}
+                aria-pressed={isSelected}
+              >
+                <span className="box__count">{count}</span>
+                <span className="box__label">Box {box}</span>
+                <span className="box__due">{dueByBox[box]} due</span>
+              </button>
+            )
+          })}
         </div>
+        {selectedBox !== null && (
+          <p className="muted box-hint">Learning from Box {selectedBox} only. Tap again to deselect.</p>
+        )}
       </div>
 
       {total === 0 ? (
@@ -75,13 +94,17 @@ export function Dashboard({ profile, onStart, onGoVocab }: Props) {
             Go to Vocabulary
           </button>
         </div>
-      ) : dueCount === 0 ? (
+      ) : activeDueCount === 0 ? (
         <div className="card">
-          <p>All caught up — nothing is due right now.</p>
+          <p>
+            {selectedBox === null
+              ? 'All caught up — nothing is due right now.'
+              : `No due cards in Box ${selectedBox} right now.`}
+          </p>
         </div>
       ) : (
-        <button type="button" className="btn btn--primary btn--block" onClick={onStart}>
-          Start learning ({dueCount})
+        <button type="button" className="btn btn--primary btn--block" onClick={() => onStart(selectedBox)}>
+          {selectedBox === null ? 'Start learning' : `Learn Box ${selectedBox}`} ({activeDueCount})
         </button>
       )}
     </section>
