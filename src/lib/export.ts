@@ -115,22 +115,40 @@ export function cardsToVocabulary(cards: SimpleCard[], profileId: number): { val
   return { valid, skipped }
 }
 
-/** Adds vocabulary rows with fresh Leitner state (due immediately). */
-export async function addCardsToProfile(cards: NewVocabulary[]): Promise<void> {
-  if (cards.length === 0) return
+/** Adds vocabulary rows with fresh Leitner state (due immediately), skipping duplicates. */
+export async function addCardsToProfile(cards: NewVocabulary[]): Promise<{ added: number; skipped: number }> {
+  if (cards.length === 0) return { added: 0, skipped: 0 }
+
+  const profileIds = Array.from(new Set(cards.map((c) => c.profileId)))
   const now = Date.now()
-  await db.transaction('rw', db.vocabulary, async () => {
-    await db.vocabulary.bulkAdd(
-      cards.map((c) => ({
-        ...c,
-        box: 1,
-        dueDate: now,
-        correctCount: 0,
-        wrongCount: 0,
-        lastReviewed: null,
-        createdAt: now,
-      })),
-    )
+
+  return db.transaction('rw', db.vocabulary, async () => {
+    const existing = await db.vocabulary.where('profileId').anyOf(profileIds).toArray()
+    const seen = new Set(existing.map((w) => `${w.profileId}:${w.kind}:${w.english.trim().toLowerCase()}`))
+
+    const fresh: NewVocabulary[] = []
+    for (const c of cards) {
+      const key = `${c.profileId}:${c.kind}:${c.english.trim().toLowerCase()}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      fresh.push(c)
+    }
+
+    if (fresh.length > 0) {
+      await db.vocabulary.bulkAdd(
+        fresh.map((c) => ({
+          ...c,
+          box: 1,
+          dueDate: now,
+          correctCount: 0,
+          wrongCount: 0,
+          lastReviewed: null,
+          createdAt: now,
+        })),
+      )
+    }
+
+    return { added: fresh.length, skipped: cards.length - fresh.length }
   })
 }
 

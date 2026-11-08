@@ -22,12 +22,15 @@ export function ImportDialog({ profile, onClose }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const [done, setDone] = useState(false)
+  const [result, setResult] = useState<{ added: number; skipped: number } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const importingRef = useRef(false)
 
   async function handleFile(file: File) {
     setError(null)
     setDone(false)
     setMode(null)
+    setResult(null)
     try {
       const text = await file.text()
       const payload = parseImport(text)
@@ -47,15 +50,23 @@ export function ImportDialog({ profile, onClose }: Props) {
   }
 
   async function doImport() {
-    if (importing) return
+    if (importingRef.current) return
+    importingRef.current = true
     setImporting(true)
-    if (mode === 'restore' && restoreData) {
-      await restoreBackup(restoreData)
-    } else if (mode === 'add') {
-      await addCardsToProfile(cards)
+    setError(null)
+    try {
+      if (mode === 'restore' && restoreData) {
+        await restoreBackup(restoreData)
+      } else if (mode === 'add') {
+        setResult(await addCardsToProfile(cards))
+      }
+      setDone(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Import failed.')
+    } finally {
+      importingRef.current = false
+      setImporting(false)
     }
-    setImporting(false)
-    setDone(true)
   }
 
   const wordCount = cards.filter((c) => c.kind === 'word').length
@@ -143,6 +154,17 @@ export function ImportDialog({ profile, onClose }: Props) {
         {done && (
           <>
             <p className="success">Import complete.</p>
+            {result && (
+              <p className="muted">
+                Added <strong>{result.added}</strong>
+                {result.skipped > 0 && (
+                  <>
+                    {' '}
+                    · Skipped <strong>{result.skipped}</strong> duplicate{result.skipped === 1 ? '' : 's'}
+                  </>
+                )}
+              </p>
+            )}
             <div className="modal-actions">
               <button type="button" className="btn btn--primary" onClick={onClose}>
                 Done

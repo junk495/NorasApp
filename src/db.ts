@@ -115,3 +115,50 @@ export async function recordStudy(profileId: number, correct: boolean): Promise<
     })
   }
 }
+
+/** Groups vocabulary rows by a case-insensitive "kind + english" key. */
+function cardKey(word: Vocabulary): string {
+  return `${word.kind}:${word.english.trim().toLowerCase()}`
+}
+
+/** Ids of redundant duplicate rows, keeping the entry with the most progress. */
+function duplicateIdsToRemove(words: Vocabulary[]): number[] {
+  const groups = new Map<string, Vocabulary[]>()
+  for (const w of words) {
+    const key = cardKey(w)
+    const list = groups.get(key)
+    if (list) list.push(w)
+    else groups.set(key, [w])
+  }
+
+  const toRemove: number[] = []
+  for (const list of groups.values()) {
+    if (list.length <= 1) continue
+    list.sort((a, b) => {
+      const pa = a.box * 1000 + (a.correctCount + a.wrongCount)
+      const pb = b.box * 1000 + (b.correctCount + b.wrongCount)
+      if (pa !== pb) return pb - pa
+      return (a.id ?? Number.MAX_SAFE_INTEGER) - (b.id ?? Number.MAX_SAFE_INTEGER)
+    })
+    for (let i = 1; i < list.length; i++) {
+      const id = list[i].id
+      if (id != null) toRemove.push(id)
+    }
+  }
+  return toRemove
+}
+
+/** Counts redundant duplicate vocabulary entries (same kind + english). */
+export function countDuplicateVocabulary(words: Vocabulary[]): number {
+  return duplicateIdsToRemove(words).length
+}
+
+/** Removes duplicate vocabulary entries for a profile, keeping the entry with the most progress. */
+export async function deduplicateVocabulary(profileId: number): Promise<{ removed: number }> {
+  const words = await db.vocabulary.where('profileId').equals(profileId).toArray()
+  const toRemove = duplicateIdsToRemove(words)
+  if (toRemove.length > 0) {
+    await db.vocabulary.bulkDelete(toRemove)
+  }
+  return { removed: toRemove.length }
+}

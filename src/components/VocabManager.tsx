@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type CardKind, type Profile, type Vocabulary } from '../db'
+import { countDuplicateVocabulary, db, deduplicateVocabulary, type CardKind, type Profile, type Vocabulary } from '../db'
 import { ImportDialog } from './ImportDialog'
 import { LoadState } from './LoadState'
 import { VocabForm } from './VocabForm'
@@ -78,6 +78,20 @@ export function VocabManager({ profile }: Props) {
     await addCardsToProfile(newCards)
   }
 
+  async function deduplicate() {
+    if (!words) return
+    const count = countDuplicateVocabulary(words)
+    if (count === 0) {
+      window.alert('No duplicate entries found.')
+      return
+    }
+    const label = count === 1 ? 'entry' : 'entries'
+    if (!window.confirm(`Remove ${count} duplicate ${label}? The entry with the most progress is kept.`)) return
+    const { removed } = await deduplicateVocabulary(profileId)
+    const removedLabel = removed === 1 ? 'entry' : 'entries'
+    window.alert(`Removed ${removed} duplicate ${removedLabel}.`)
+  }
+
   if (!words) {
     return <LoadState />
   }
@@ -135,6 +149,9 @@ export function VocabManager({ profile }: Props) {
         </button>
         <button type="button" className="btn" onClick={exportJson}>
           Export (JSON)
+        </button>
+        <button type="button" className="btn" onClick={deduplicate}>
+          Remove duplicates
         </button>
       </div>
 
